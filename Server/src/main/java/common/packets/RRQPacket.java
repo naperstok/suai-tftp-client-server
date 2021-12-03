@@ -7,15 +7,15 @@ import common.codes.OpCode;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-public class RRQpacket extends Packet {
+public class RRQPacket extends Packet {
 
-    public RRQpacket() {
+    public RRQPacket() {
         super();
         writeOpcode(OpCode.RRQ);
     }
 
 
-    public RRQpacket(byte[] data) {
+    public RRQPacket(byte[] data) {
         super(data);
     }
 

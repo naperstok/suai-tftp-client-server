@@ -4,8 +4,8 @@ import common.codes.OpCode;
 
 import java.io.IOException;
 
-public class ACKpacket extends Packet {
-    public ACKpacket(short blockNum) {
+public class ACKPacket extends Packet {
+    public ACKPacket(short blockNum) {
         super();
         writeOpcode(OpCode.ACK);
 
@@ -17,7 +17,7 @@ public class ACKpacket extends Packet {
         }
     }
 
-    public ACKpacket(byte[] data) {
+    public ACKPacket(byte[] data) {
         super(data);
     }
 

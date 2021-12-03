@@ -3,6 +3,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import server.Server;
 
+import java.io.IOException;
 import java.net.SocketException;
 
 public class ServerTest {
@@ -37,10 +38,10 @@ public class ServerTest {
     }
 
     @Test
-    public void testSwitchCase() throws SocketException {
+    public void testSwitchCase() throws IOException {
         Server server = new Server();
         server.start("server_root", true);
-        Assert.assertFalse(server.f(OpCode.RRQ, server.createDatagramPacket(new byte[]{123})));
-        Assert.assertFalse(server.f(OpCode.ERROR, server.createDatagramPacket(new byte[]{123})));
+        Assert.assertFalse(server.commandSelection(OpCode.RRQ, server.createDatagramPacket(new byte[]{123})));
+        Assert.assertFalse(server.commandSelection(OpCode.ERROR, server.createDatagramPacket(new byte[]{123})));
     }
 }

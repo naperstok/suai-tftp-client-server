@@ -7,14 +7,14 @@ import common.codes.OpCode;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-public class WRQpacket extends Packet {
+public class WRQPacket extends Packet {
 
-    public WRQpacket() {
+    public WRQPacket() {
         super();
         writeOpcode(OpCode.WRQ);
     }
 
-    public WRQpacket(byte[] data) {
+    public WRQPacket(byte[] data) {
         super(data);
     }
 

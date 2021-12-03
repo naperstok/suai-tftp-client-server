@@ -1,12 +1,6 @@
 TFTP server started on port 69
 User connected and making a read-request
-User want to download file named: 3.png
-File not found
-User connected and making a write-request
-Received 3 bytes
-ACK sent for block 1
-Received 3 bytes, file transfer complete.
-User connected and making a write-request
-Received 3 bytes
-ACK sent for block 1
-Received 3 bytes, file transfer complete.
+Sent 4 bytes
+
+Waiting for client's ACK for block 1ACK received for block 1
+Transfer of test.txtcomplete.

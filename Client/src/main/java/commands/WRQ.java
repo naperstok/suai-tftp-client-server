@@ -45,7 +45,6 @@ public class WRQ implements Command {
         }
 
         String address = Client.getIp();
-
         ClientUDP client;
         int baseTimeout = Constants.BASE_TIMEOUT;
 
@@ -55,11 +54,12 @@ public class WRQ implements Command {
             socket.setSoTimeout(baseTimeout);
             byte[] buf = client.getBuffer();
 
-            WRQpacket packet = new WRQpacket();
-            packet.writeFilename(filename);
-            byte[] payload = packet.getPayload();
-
-            client.send(payload);
+            wrqPacketCreation(filename, client);
+//            WRQPacket packet = new WRQPacket();
+//            packet.writeFilename(filename);
+//            byte[] payload = packet.getPayload();
+//
+//            client.send(payload);
 
             DatagramPacket serverPacket = new DatagramPacket(buf, buf.length);
             socket.receive(serverPacket);
@@ -75,27 +75,53 @@ public class WRQ implements Command {
 
             FileInputStream fileInputStream = new FileInputStream(file);
             byte[] fileBuf = new byte[Constants.BLOCK_SIZE];
-            short blockNum = 1;
             int bytesRead = fileInputStream.read(fileBuf);
 
-            while (bytesRead != -1) {
-                DataPacket dataPacket = new DataPacket(blockNum, fileBuf, 0, bytesRead);
-                int bytesSent = client.send(dataPacket.getPayload()) - 4;
-                System.out.println("Block " + blockNum + " - Sent " + bytesSent + " bytes");
+            fileTransfer(socket, client, serverPacket, fileInputStream, bytesRead, fileBuf);
 
-                System.out.println("Waiting for server's ACK for block " + blockNum);
-                socket.receive(serverPacket);
-                ACKpacket ackPacket = new ACKpacket(serverPacket.getData());
-                System.out.println("ACK received for block " + ackPacket.getBlockNumber());
-
-                bytesRead = fileInputStream.read(fileBuf);
-                blockNum = (short) ((blockNum == Short.MAX_VALUE) ? 0 : blockNum + 1);
-            }
+//            while (bytesRead != -1) {
+//                DataPacket dataPacket = new DataPacket(blockNum, fileBuf, 0, bytesRead);
+//                int bytesSent = client.send(dataPacket.getPayload()) - 4;
+//                System.out.println("Block " + blockNum + " - Sent " + bytesSent + " bytes");
+//
+//                System.out.println("Waiting for server's ACK for block " + blockNum);
+//                socket.receive(serverPacket);
+//                ACKPacket ackPacket = new ACKPacket(serverPacket.getData());
+//                System.out.println("ACK received for block " + ackPacket.getBlockNumber());
+//
+//                bytesRead = fileInputStream.read(fileBuf);
+//                blockNum = (short) ((blockNum == Short.MAX_VALUE) ? 0 : blockNum + 1);
+//            }
             Notification.createNotification(Client.getMenu(), "Success!", true, true, "Success! File downloaded!").setVisible(true);
             client.close();
             fileInputStream.close();
         } catch (IOException ex) {
             ex.printStackTrace();
+        }
+    }
+
+    public static void wrqPacketCreation(String filename, ClientUDP client) throws IOException {
+        WRQPacket packet = new WRQPacket();
+        packet.writeFilename(filename);
+        byte[] payload = packet.getPayload();
+
+        client.send(payload);
+    }
+
+    public static void fileTransfer(DatagramSocket socket, ClientUDP client, DatagramPacket serverPacket, FileInputStream fileInputStream, int bytesRead, byte[] fileBuf) throws IOException {
+        short blockNum = 1;
+        while (bytesRead != -1) {
+            DataPacket dataPacket = new DataPacket(blockNum, fileBuf, 0, bytesRead);
+            int bytesSent = client.send(dataPacket.getPayload()) - 4;
+            System.out.println("Block " + blockNum + " - Sent " + bytesSent + " bytes");
+
+            System.out.println("Waiting for server's ACK for block " + blockNum);
+            socket.receive(serverPacket);
+            ACKPacket ackPacket = new ACKPacket(serverPacket.getData());
+            System.out.println("ACK received for block " + ackPacket.getBlockNumber());
+
+            bytesRead = fileInputStream.read(fileBuf);
+            blockNum = (short) ((blockNum == Short.MAX_VALUE) ? 0 : blockNum + 1);
         }
     }
 

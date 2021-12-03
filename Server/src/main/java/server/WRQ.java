@@ -3,15 +3,12 @@ package server;
 import common.Constants;
 import common.ServerUDP;
 import common.codes.ErrorCode;
-import common.packets.ACKpacket;
+import common.packets.ACKPacket;
 import common.packets.DataPacket;
 import common.packets.ErrorPacket;
-import common.packets.WRQpacket;
+import common.packets.WRQPacket;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketTimeoutException;
@@ -20,38 +17,20 @@ public class WRQ {
 
     public static void handleOperation(ServerUDP server, DatagramPacket clientPacket) {
         DatagramSocket socket = server.getSocket();
-        WRQpacket wrqPacket = new WRQpacket(clientPacket.getData());
+        WRQPacket wrqPacket = new WRQPacket(clientPacket.getData());
 
         String filename = null;
-        try {
-            filename = wrqPacket.getFilename();
-        } catch (IOException ex) {
-            sendReport("Failed to deserialize file name\n");
-            System.out.println("Failed to deserialize file name!");
-            ex.printStackTrace();
-        }
+        filename = getFilename(wrqPacket);
+
         if (filename == null) {
             sendReport("File name equals null\n");
             System.exit(1);
         }
 
         File file = new File(server.getRootDir(), filename);
+        sendReport("User want to upload file named: " + filename + "\n");
 
-        if (file.exists()) {
-            sendReport("User want to upload file named: " + filename + "\n");
-            sendReport("Error - file already exists!\n");
-            ErrorPacket errorPacket = new ErrorPacket(ErrorCode.FILE_ALREADY_EXISTS, "File already exists!");
-            System.out.println("Error - file already exists!");
-            DatagramPacket response = new DatagramPacket(errorPacket.getPayload(), errorPacket.getPayload().length, clientPacket.getSocketAddress());
-
-            try {
-                socket.send(response);
-            } catch (IOException ex) {
-                sendReport("Failed to send response packet\n");
-                System.out.println("Failed to send response packet!");
-                ex.printStackTrace();
-            }
-        }
+        fileExistenceChecking(file, socket, clientPacket);
 
         ByteArrayOutputStream recvFileBuf = new ByteArrayOutputStream();
         int bytesReceived = 0;
@@ -60,18 +39,7 @@ public class WRQ {
 
         try {
             socket.setSoTimeout(Constants.BASE_TIMEOUT);
-
-            ACKpacket initialAck = new ACKpacket(blockNum);
-            DatagramPacket response = new DatagramPacket(initialAck.getPayload(), initialAck.getPayload().length, clientPacket.getSocketAddress());
-
-            try {
-                socket.send(response);
-            } catch (IOException ex) {
-                sendReport("Failed to send initial ACK\n");
-                System.out.println("Failed to send initial ACK!");
-                ex.printStackTrace();
-                System.exit(1);
-            }
+            sendInitialAckPacket(socket, clientPacket, blockNum);
 
             while (true) {
                 if (tries == 0) {
@@ -93,14 +61,11 @@ public class WRQ {
                     recvFileBuf.write(dataPacket.getPayload(), 4, receivedBlockSize);
                     tries = 5;
 
-                    ACKpacket ackPacket = new ACKpacket(blockNum);
-                    response = new DatagramPacket(ackPacket.getPayload(), ackPacket.getPayload().length, clientPacket.getSocketAddress());
-                    socket.send(response);
-                    sendReport("ACK sent for block " + blockNum + "\n");
-                    System.out.printf("ACK sent for block %d\n", blockNum);
+                    sendAckPacket(socket, clientPacket, blockNum);
 
-                    if (receivedBlockSize < Constants.BLOCK_SIZE)
+                    if (receivedBlockSize < Constants.BLOCK_SIZE) {
                         break;
+                    }
 
                 } catch (IOException ex) {
                     if (ex.getCause() instanceof SocketTimeoutException) {
@@ -118,11 +83,9 @@ public class WRQ {
             }
 
             sendReport("Received " + bytesReceived + " bytes, file transfer complete.\n");
-            System.out.printf("Received %d bytes, file transfer complete.\n", bytesReceived);
-            FileOutputStream fileOutputStream = new FileOutputStream(file);
-            recvFileBuf.writeTo(fileOutputStream);
-            fileOutputStream.close();
-            recvFileBuf.close();
+            System.out.println("Received " + bytesReceived + " bytes, file transfer complete.");
+            writingFile(file, recvFileBuf);
+
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -132,4 +95,61 @@ public class WRQ {
         return LogWriter.writeEvent(report);
     }
 
+    public static String getFilename(WRQPacket wrqPacket){
+        try {
+            return wrqPacket.getFilename();
+        } catch (IOException ex) {
+            sendReport("Failed to deserialize file name\n");
+            System.out.println("Failed to deserialize file name!");
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void fileExistenceChecking(File file, DatagramSocket socket, DatagramPacket clientPacket) {
+
+        if (file.exists()) {
+            sendReport("Error - file already exists!\n");
+            ErrorPacket errorPacket = new ErrorPacket(ErrorCode.FILE_ALREADY_EXISTS, "File already exists!");
+            System.out.println("Error - file already exists!");
+            DatagramPacket response = new DatagramPacket(errorPacket.getPayload(), errorPacket.getPayload().length, clientPacket.getSocketAddress());
+
+            try {
+                socket.send(response);
+            } catch (IOException ex) {
+                sendReport("Failed to send response packet\n");
+                System.out.println("Failed to send response packet!");
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    public static void sendInitialAckPacket(DatagramSocket socket, DatagramPacket clientPacket, short blockNum) {
+        ACKPacket initialAck = new ACKPacket(blockNum);
+        DatagramPacket response = new DatagramPacket(initialAck.getPayload(), initialAck.getPayload().length, clientPacket.getSocketAddress());
+
+        try {
+            socket.send(response);
+        } catch (IOException ex) {
+            sendReport("Failed to send initial ACK\n");
+            System.out.println("Failed to send initial ACK!");
+            ex.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    public static void sendAckPacket(DatagramSocket socket, DatagramPacket clientPacket, short blockNum) throws IOException {
+        ACKPacket ackPacket = new ACKPacket(blockNum);
+        DatagramPacket response = new DatagramPacket(ackPacket.getPayload(), ackPacket.getPayload().length, clientPacket.getSocketAddress());
+        socket.send(response);
+        sendReport("ACK sent for block " + blockNum + "\n");
+        System.out.printf("ACK sent for block %d\n", blockNum);
+    }
+
+    public static void writingFile(File file,ByteArrayOutputStream recvFileBuf) throws IOException {
+        FileOutputStream fileOutputStream = new FileOutputStream(file);
+        recvFileBuf.writeTo(fileOutputStream);
+        fileOutputStream.close();
+        recvFileBuf.close();
+    }
 }

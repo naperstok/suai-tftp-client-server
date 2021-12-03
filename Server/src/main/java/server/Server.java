@@ -25,24 +25,12 @@ public class Server {
         while (true) {
             try {
                 socket.setSoTimeout(0);
-                //DatagramPacket clientPacket = new DatagramPacket(recvBuf, recvBuf.length);
                 DatagramPacket clientPacket = createDatagramPacket(recvBuf);
                 socket.receive(clientPacket);
-                //Packet packet = new Packet(clientPacket.getData());
                 Packet packet = createPacket(clientPacket);
 
-                f(packet.getOpcode(), clientPacket);
+                commandSelection(packet.getOpcode(), clientPacket);
 
-               /* switch (packet.getOpcode()) {
-                    case server.RRQ -> {
-                        sendReport("User connected and making a read-request\n");
-                        server.RRQ.handleOperation(server, clientPacket);
-                    }
-                    case server.WRQ -> {
-                        sendReport("User connected and making a write-request\n");
-                        server.WRQ.handleOperation(server, clientPacket);
-                    }
-                }*/
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -52,7 +40,6 @@ public class Server {
     public boolean start(String fileRoot, boolean test) throws SocketException {
 
         try {
-
             server = new ServerUDP(Constants.SERVER_LISTEN_PORT, 1024, fileRoot);
             DatagramSocket socket = server.getSocket();
             byte[] recvBuf = server.getBuffer();
@@ -64,24 +51,12 @@ public class Server {
                 while (true) {
                     try {
                         socket.setSoTimeout(0);
-                        //DatagramPacket clientPacket = new DatagramPacket(recvBuf, recvBuf.length);
                         DatagramPacket clientPacket = createDatagramPacket(recvBuf);
                         socket.receive(clientPacket);
-                        //Packet packet = new Packet(clientPacket.getData());
                         Packet packet = createPacket(clientPacket);
 
-                        f(packet.getOpcode(), clientPacket);
+                        commandSelection(packet.getOpcode(), clientPacket);
 
-               /* switch (packet.getOpcode()) {
-                    case server.RRQ -> {
-                        sendReport("User connected and making a read-request\n");
-                        server.RRQ.handleOperation(server, clientPacket);
-                    }
-                    case server.WRQ -> {
-                        sendReport("User connected and making a write-request\n");
-                        server.WRQ.handleOperation(server, clientPacket);
-                    }
-                }*/
                     } catch (IOException ex) {
                         ex.printStackTrace();
                         return false;
@@ -112,7 +87,7 @@ public class Server {
         return new Packet(clientPacket.getData());
     }
 
-    public boolean f (OpCode string, DatagramPacket clientPacket) {
+    public boolean commandSelection (OpCode string, DatagramPacket clientPacket) throws IOException {
         if(server == null) return false;
         switch (string) {
             case RRQ -> {
