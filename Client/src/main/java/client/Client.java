@@ -18,10 +18,6 @@ public class Client {
 
         menu =  new MenuFrame();
         menu.setVisible(true);
-
-        new IpFrame().setVisible(true);
-
-
         CLIENT_ROOT = args[0];
     }
 
@@ -70,24 +66,64 @@ public class Client {
                 if (!textField.getText().contains(".")) {
                     Notification.createNotification(this, "Error!", true, false, "Please, specify the file format.").setVisible(true);
                 } else {
-                    String result = "rrq " + textField.getText();
-                    new CommandParser().parse(result);
+                    new IpFrame(true).setVisible(true);
                 }
             });
             wrqButton.addActionListener(e -> {
                 if (!textField.getText().contains(".")) {
                     Notification.createNotification(this, "Error!", true, false, "Please, specify the file format.").setVisible(true);
                 } else {
-                    String result = "wrq " + textField.getText();
-                    new CommandParser().parse(result);
+                    new IpFrame(false).setVisible(true);
                 }
             });
             helpButton.addActionListener(e -> {
-                createHelp(this, 400, 400, "Help", true).setVisible(true);
+                createHelp(this, 400, 450, "Help", true).setVisible(true);
             });
             exitButton.addActionListener(e -> {
                 System.exit(0);
             });
+        }
+
+        public class IpFrame extends JFrame {
+            private final int WIDTH = 300;
+            private final int HEIGHT = 200;
+            private final JTextField jTextField;
+            private final JButton button;
+            private boolean mode = true; // true - rrq, false - wrq
+
+
+            public IpFrame(boolean mode) {
+                this.mode = mode;
+                this.setTitle("Enter the ip of server");
+                this.setResizable(false);
+                this.setSize(WIDTH, HEIGHT);
+                this.setLayout(null);
+                JPanel panel = new JPanel();
+                panel.setLayout(new GridLayout(2, 1, 30, 30));
+                jTextField = new JTextField();
+                jTextField.setText("localhost");
+                panel.add(jTextField);
+                button = new JButton("Set ip address of the server");
+                button.addActionListener(e -> {
+                    ipServer = jTextField.getText();
+                    if (!ipServer.contains(".") && !ipServer.equals("localhost")) {
+                        Notification.createNotification(this, "Error!", true, false, "Please, enter the correct IP address").setVisible(true);
+                    } else {
+                        if(mode == true) {
+                            String result = "rrq " + textField.getText();
+                            new CommandParser().parse(result);
+                        } else {
+                            String result = "wrq " + textField.getText();
+                            new CommandParser().parse(result);
+                        }
+                        this.setVisible(false);
+                    }
+                });
+                button.setSize(100, 50);
+                panel.add(button);
+                panel.setBounds(50, 30, 200, 100);
+                this.add(panel);
+            }
         }
     }
 
@@ -105,41 +141,8 @@ public class Client {
         panel.add(new JLabel("<html>* Send a file - a button that allows you to upload a <br> file to the server.</html>"));
         panel.add(new JLabel("<html>* Help - a button that allows you to get a information <br> about this program.</html>"));
         panel.add(new JLabel("<html>* Exit - a button that allows you to close this program.</html>"));
-        panel.setBounds(50, 5, 300, 380);
+        panel.setBounds(50, 5, 300, 420);
         dialog.add(panel);
         return dialog;
-    }
-
-    public class IpFrame extends JFrame {
-        private final int WIDTH = 300;
-        private final int HEIGHT = 200;
-        private final JTextField jTextField;
-        private final JButton button;
-
-
-        public IpFrame() {
-            this.setTitle("Enter the ip of server");
-            this.setResizable(false);
-            this.setSize(WIDTH, HEIGHT);
-            this.setLayout(null);
-            JPanel panel = new JPanel();
-            panel.setLayout(new GridLayout(2, 1, 30, 30));
-            jTextField = new JTextField();
-            jTextField.setText("localhost");
-            panel.add(jTextField);
-            button = new JButton("Set ip address of the server");
-            button.addActionListener(e -> {
-                ipServer = jTextField.getText();
-                if (!ipServer.contains(".") && !ipServer.equals("localhost")) {
-                    Notification.createNotification(this, "Error!", true, false, "Please, enter the correct IP address").setVisible(true);
-                } else {
-                    this.setVisible(false);
-                }
-            });
-            button.setSize(100, 50);
-            panel.add(button);
-            panel.setBounds(50, 30, 200, 100);
-            this.add(panel);
-        }
     }
 }

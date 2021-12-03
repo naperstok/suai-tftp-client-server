@@ -24,40 +24,37 @@ public class RRQ {
         RRQpacket rrqPacket = new RRQpacket(clientPacket.getData());
 
         String filename = null;
-        try {
-            filename = rrqPacket.getFilename();
-        } catch (IOException ex) {
-            sendReport("Failed to deserialize file name\n");
-            System.out.println("Failed to deserialize file name!");
-            ex.printStackTrace();
-        }
+        filename = getFileName(rrqPacket);
+
         if (filename == null)
             System.exit(1);
 
         File file = new File(server.getRootDir(), filename);
         FileInputStream fileInputStream = null;
 
-        try {
-            sendReport("User want to download file named: " + filename + "\n");
-            fileInputStream = new FileInputStream(file);
-        } catch (FileNotFoundException ex) {
-            sendReport("File not found\n");
-            System.out.println("File not found!");
-            ErrorPacket errorPacket = new ErrorPacket(ErrorCode.FILE_NOT_FOUND, "File not found!");
-            DatagramPacket response = new DatagramPacket(errorPacket.getPayload(), errorPacket.getPayload().length, clientPacket.getSocketAddress());
-
-            try {
-                socket.send(response);
-            } catch (IOException exc) {
-                sendReport("Failed to send response packet!\n");
-                System.out.println("Failed to send response packet!");
-                exc.printStackTrace();
-            }
-        }
+        sendReport("User want to download file named: " + filename + "\n");
+        fileInputStream = responsePacket(file, socket, clientPacket);
 
         if (fileInputStream == null)
             return;
 
+//        try {
+//            sendReport("User want to download file named: " + filename + "\n");
+//            fileInputStream = new FileInputStream(file);
+//        } catch (FileNotFoundException ex) {
+//            sendReport("File not found\n");
+//            System.out.println("File not found!");
+//            ErrorPacket errorPacket = new ErrorPacket(ErrorCode.FILE_NOT_FOUND, "File not found!");
+//            DatagramPacket response = new DatagramPacket(errorPacket.getPayload(), errorPacket.getPayload().length, clientPacket.getSocketAddress());
+//
+//            try {
+//                socket.send(response);
+//            } catch (IOException exc) {
+//                sendReport("Failed to send response packet!\n");
+//                System.out.println("Failed to send response packet!");
+//                exc.printStackTrace();
+//            }
+//        }
         short blockNum = 1;
         int tries = 5;
         byte[] fileBuf = new byte[Constants.BLOCK_SIZE];
@@ -75,15 +72,16 @@ public class RRQ {
                     return;
                 }
 
-                DataPacket dataPacket = new DataPacket(blockNum, fileBuf, 0, bytesRead);
-                DatagramPacket outgoingPacket = new DatagramPacket(dataPacket.getPayload(), dataPacket.getPayload().length, clientPacket.getSocketAddress());
-                socket.send(outgoingPacket);
-                sendReport("Sent " + (outgoingPacket.getLength() - 4) + " bytes\n");
-                System.out.println("Sent " + (outgoingPacket.getLength() - 4) + " bytes");
+                sendPackets(socket, clientPacket, blockNum, fileBuf, bytesRead);
 
-                sendReport("Waiting for client's ACK for block " + blockNum);
-                System.out.println("Waiting for client's ACK for block " + blockNum);
-
+//                DataPacket dataPacket = new DataPacket(blockNum, fileBuf, 0, bytesRead);
+//                DatagramPacket outgoingPacket = new DatagramPacket(dataPacket.getPayload(), dataPacket.getPayload().length, clientPacket.getSocketAddress());
+//                socket.send(outgoingPacket);
+//                sendReport("Sent " + (outgoingPacket.getLength() - 4) + " bytes\n");
+//                System.out.println("Sent " + (outgoingPacket.getLength() - 4) + " bytes");
+//
+//                sendReport("\nWaiting for client's ACK for block " + blockNum);
+//                System.out.println("Waiting for client's ACK for block " + blockNum);
                 try {
                     DatagramPacket incomingPacket = new DatagramPacket(recvBuf, recvBuf.length);
                     socket.receive(incomingPacket);
@@ -122,5 +120,71 @@ public class RRQ {
     public static boolean sendReport(String report) {
         return LogWriter.writeEvent(report);
     }
+
+    public static String getFileName(RRQpacket rrqPacket){
+
+        try {
+            return rrqPacket.getFilename();
+        } catch (IOException ex) {
+            sendReport("Failed to deserialize file name\n");
+            System.out.println("Failed to deserialize file name!");
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    public static FileInputStream responsePacket(File file, DatagramSocket socket, DatagramPacket clientPacket){
+        try {
+            FileInputStream fileInputStream = new FileInputStream(file);
+            return fileInputStream;
+        } catch (FileNotFoundException ex) {
+            sendReport("File not found\n");
+            System.out.println("File not found!");
+            ErrorPacket errorPacket = new ErrorPacket(ErrorCode.FILE_NOT_FOUND, "File not found!");
+            DatagramPacket response = new DatagramPacket(errorPacket.getPayload(), errorPacket.getPayload().length, clientPacket.getSocketAddress());
+
+            try {
+                socket.send(response);
+            } catch (IOException exc) {
+                sendReport("Failed to send response packet!\n");
+                System.out.println("Failed to send response packet!");
+                exc.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    public static void sendPackets(DatagramSocket socket, DatagramPacket clientPacket, short blockNum, byte[] fileBuf, int bytesRead) throws IOException {
+
+        DataPacket dataPacket = new DataPacket(blockNum, fileBuf, 0, bytesRead);
+        DatagramPacket outgoingPacket = new DatagramPacket(dataPacket.getPayload(), dataPacket.getPayload().length, clientPacket.getSocketAddress());
+        socket.send(outgoingPacket);
+        sendReport("Sent " + (outgoingPacket.getLength() - 4) + " bytes\n");
+        System.out.println("Sent " + (outgoingPacket.getLength() - 4) + " bytes");
+
+        sendReport("\nWaiting for client's ACK for block " + blockNum);
+        System.out.println("Waiting for client's ACK for block " + blockNum);
+    }
+
+//    public static getResponsePackets (DatagramSocket socket, byte[] recvBuf, int bytesRead, ) throws IOException {
+//        try {
+//            DatagramPacket incomingPacket = new DatagramPacket(recvBuf, recvBuf.length);
+//            socket.receive(incomingPacket);
+//            ACKpacket ackPacket = new ACKpacket(incomingPacket.getData());
+//            sendReport("ACK received for block " + ackPacket.getBlockNumber() + "\n");
+//            System.out.println("ACK received for block " + ackPacket.getBlockNumber());
+//
+//            bytesRead = fileInputStream.read(fileBuf);
+//            blockNum = (short) ((blockNum == Short.MAX_VALUE) ? 0 : blockNum + 1);
+//
+//            tries = 5;
+//            socket.setSoTimeout(Constants.BASE_TIMEOUT);
+//        } catch (SocketTimeoutException ex) {
+//            tries--;
+//            sendReport("No ACK received for block " + blockNum + ". " + tries + " tries remaining.\n");
+//            System.out.println("No ACK received for block " + blockNum + ". " + tries + " tries remaining.");
+//            socket.setSoTimeout(socket.getSoTimeout() + 1000);
+//        }
+//    }
 
 }

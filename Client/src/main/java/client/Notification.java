@@ -19,9 +19,11 @@ public class Notification {
         panel.setBounds(50, 50, 300, 30);
         dialog.add(panel);
         if (correct) {
-            panel.setBackground(Color.green);
+            Color c1 = new Color(110, 212, 120);
+            panel.setBackground(c1);
         } else {
-            panel.setBackground(Color.red);
+            Color c2 = new Color(255, 100, 100);
+            panel.setBackground(c2);
         }
         return dialog;
     }
