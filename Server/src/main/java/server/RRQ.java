@@ -147,8 +147,8 @@ public class RRQ {
 //            ex.printStackTrace();
 //        }
 
-        sendReport("Transfer of " + filename + "complete.\n");
-        System.out.println("Transfer of " + filename + "complete.");
+        sendReport("Transfer of " + filename + " complete.\n");
+        System.out.println("Transfer of " + filename + " complete.");
 
         try {
             fileInputStream.close();
