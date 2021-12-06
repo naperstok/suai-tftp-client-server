@@ -20,7 +20,7 @@ public class RRQTest {
     @Test
     public void testFileCreation() {
         String fileName = "1.jpg";
-        File file = new File("C:\\Users\\User\\Desktop\\Kursovaya\\tftpProject\\Server\\src\\main\\resources", fileName);
+        File file = new File("..\\resources", fileName);
         try {
             file.createNewFile();
         } catch (IOException e) {

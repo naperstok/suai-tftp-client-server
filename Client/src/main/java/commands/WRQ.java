@@ -55,11 +55,6 @@ public class WRQ implements Command {
             byte[] buf = client.getBuffer();
 
             wrqPacketCreation(filename, client);
-//            WRQPacket packet = new WRQPacket();
-//            packet.writeFilename(filename);
-//            byte[] payload = packet.getPayload();
-//
-//            client.send(payload);
 
             DatagramPacket serverPacket = new DatagramPacket(buf, buf.length);
             socket.receive(serverPacket);
@@ -79,19 +74,6 @@ public class WRQ implements Command {
 
             fileTransfer(socket, client, serverPacket, fileInputStream, bytesRead, fileBuf);
 
-//            while (bytesRead != -1) {
-//                DataPacket dataPacket = new DataPacket(blockNum, fileBuf, 0, bytesRead);
-//                int bytesSent = client.send(dataPacket.getPayload()) - 4;
-//                System.out.println("Block " + blockNum + " - Sent " + bytesSent + " bytes");
-//
-//                System.out.println("Waiting for server's ACK for block " + blockNum);
-//                socket.receive(serverPacket);
-//                ACKPacket ackPacket = new ACKPacket(serverPacket.getData());
-//                System.out.println("ACK received for block " + ackPacket.getBlockNumber());
-//
-//                bytesRead = fileInputStream.read(fileBuf);
-//                blockNum = (short) ((blockNum == Short.MAX_VALUE) ? 0 : blockNum + 1);
-//            }
             Notification.createNotification(Client.getMenu(), "Success!", true, true, "Success! File downloaded!").setVisible(true);
             client.close();
             fileInputStream.close();

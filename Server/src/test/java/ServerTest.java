@@ -13,7 +13,7 @@ public class ServerTest {
         Server server = new Server();
         Assert.assertFalse(server.serverIsOnline());
 
-        Assert.assertTrue(server.start("..\\server_root", true));
+        Assert.assertTrue(server.start("C:\\Users\\User\\Desktop\\Kursovaya\\tftpProject\\Server\\src\\main\\resources", true));
     }
 
     @Test
@@ -40,7 +40,7 @@ public class ServerTest {
     @Test
     public void testSwitchCase() throws IOException {
         Server server = new Server();
-        server.start("server_root", true);
+        server.start("C:\\Users\\User\\Desktop\\Kursovaya\\tftpProject\\Server\\src\\main\\resources", true);
         Assert.assertFalse(server.commandSelection(OpCode.RRQ, server.createDatagramPacket(new byte[]{123})));
         Assert.assertFalse(server.commandSelection(OpCode.ERROR, server.createDatagramPacket(new byte[]{123})));
     }

@@ -49,21 +49,10 @@ public class RRQ implements Command {
             byte[] buf = client.getBuffer();
 
             rrqPacketCreation(filename, socket, client);
-//            RRQPacket rrqPacket = new RRQPacket();
-//            rrqPacket.writeFilename(filename);
-//            byte[] payload = rrqPacket.getPayload();
-//
-//            socket.setSoTimeout(5000);
-//            client.send(payload);
+
             DatagramPacket serverPacket = new DatagramPacket(buf, buf.length);
             Packet packet = datagramPacketChecking(socket, serverPacket);
-//            try {
-//                socket.receive(serverPacket);
-//            } catch (Exception exception) {
-//                Notification.createNotification(Client.getMenu(), "Error!", true, false, "Mistake! The server is not working!").setVisible(true);
-//            }
-//
-//            Packet packet = new Packet(serverPacket.getData());
+
             if (packet.getOpcode() == OpCode.ERROR) {
                 ErrorPacket errorPacket = new ErrorPacket(serverPacket.getData());
                 String error = errorPacket.getErrorMessage();
@@ -77,44 +66,6 @@ public class RRQ implements Command {
 
             DataPacket dataPacket = new DataPacket(serverPacket.getData());
             int bytesReceived = fileTransfer(socket, dataPacket, serverPacket, fileBuf, buf, timeout);
-//            int tries = 5;
-//            int bytesReceived = 0;
-//            boolean retransmit = false;
-
-//            while (true) {
-//                if (tries == 0)
-//                    break;
-//                try {
-//                    short ackNum = dataPacket.getBlockNumber();
-//                    int receivedBlockSize = serverPacket.getLength() - 4;
-////
-//                    if (!retransmit) {
-//                        bytesReceived += receivedBlockSize;
-//                        fileBuf.write(dataPacket.getPayload(), 4, receivedBlockSize);
-//                        System.out.println("Received block " + ackNum + " of size " + receivedBlockSize + " bytes\nSending ACK for block " + ackNum);
-//                    }
-//
-//                    sendAckPacket(socket, serverPacket, ackNum);
-////                    ACKPacket ackPacket = new ACKPacket(ackNum);
-////                    serverPacket.setData(ackPacket.getPayload());
-////                    socket.send(serverPacket);
-//                    if (receivedBlockSize < Constants.BLOCK_SIZE) {
-//                        System.out.println("Block " + ackNum + " has size < 512 bytes - file transfer complete!");
-//                        break;
-//                    }
-//
-//                    serverPacket = new DatagramPacket(buf, buf.length);
-//                    socket.receive(serverPacket);
-//                    dataPacket = new DataPacket(serverPacket.getData());
-//                    retransmit = false;
-//                } catch (SocketTimeoutException ex) {
-//                    System.out.println("Time is out... " + tries + " tries left.");
-//                    timeout += 1000;
-//                    tries--;
-//                    socket.setSoTimeout(timeout);
-//                    retransmit = true;
-//                }
-//            }
 
             System.out.println("Received " + bytesReceived + " bytes");
             File file = new File(Client.CLIENT_ROOT, filename);
@@ -126,10 +77,6 @@ public class RRQ implements Command {
                     return;
                 }
             }
-//            FileOutputStream fileOutputStream = new FileOutputStream(file);
-//            fileBuf.writeTo(fileOutputStream);
-//            Notification.createNotification(Client.getMenu(), "Success!", true, true, "Success! File downloaded!").setVisible(true);
-//            fileOutputStream.close();
             writingFile(file, fileBuf);
             client.close();
         } catch (IOException ex) {
@@ -156,9 +103,7 @@ public class RRQ implements Command {
                 }
 
                 sendAckPacket(socket, serverPacket, ackNum);
-//                    ACKPacket ackPacket = new ACKPacket(ackNum);
-//                    serverPacket.setData(ackPacket.getPayload());
-//                    socket.send(serverPacket);
+
                 if (receivedBlockSize < Constants.BLOCK_SIZE) {
                     System.out.println("Block " + ackNum + " has size < 512 bytes - file transfer complete!");
                     break;

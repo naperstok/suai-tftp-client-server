@@ -12,7 +12,7 @@ public enum ErrorCode {
     UNKNOWN_TID, //Неправильный Transfer ID
     FILE_ALREADY_EXISTS, //Файл уже существует
     NO_SUCH_USER; //Пользователь не существует
-//Immutable
+
     public static final HashMap<ErrorCode, Integer> ecToIntMappings = new  HashMap<>() {{
         put(NOT_DEFINED, 0);
         put(FILE_NOT_FOUND, 1);

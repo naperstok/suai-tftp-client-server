@@ -37,30 +37,17 @@ public class Server {
         }
     }
 
-    public boolean start(String fileRoot, boolean test) throws SocketException {
+    public boolean start(String fileRoot, boolean test) {
 
         try {
             server = new ServerUDP(Constants.SERVER_LISTEN_PORT, 1024, fileRoot);
-            DatagramSocket socket = server.getSocket();
-            byte[] recvBuf = server.getBuffer();
 
             System.out.printf("TFTP server started on port %d\n", Constants.SERVER_LISTEN_PORT);
             LogWriter.writeEvent("TFTP server started on port " + Constants.SERVER_LISTEN_PORT + "\n");
 
-            if (!test) {
+            if (test) {
                 while (true) {
-                    try {
-                        socket.setSoTimeout(0);
-                        DatagramPacket clientPacket = createDatagramPacket(recvBuf);
-                        socket.receive(clientPacket);
-                        Packet packet = createPacket(clientPacket);
-
-                        commandSelection(packet.getOpcode(), clientPacket);
-
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                        return false;
-                    }
+                    return true;
                 }
             }
             return true;
