@@ -1,5 +1,4 @@
 package server;
-
 import common.Constants;
 import common.ServerUDP;
 import common.codes.ErrorCode;
@@ -17,10 +16,19 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketTimeoutException;
 
+/**
+ * Represents a Read Request function
+ */
 public class RRQ {
 
     private static final Logger logger = Logger.getLogger(RRQ.class);
 
+    /**
+     * Read request handle operation
+     * @param server UDP server instance
+     * @param clientPacket the DatagramPacket from the UDP client
+     * @throws IOException if an error occurs
+     */
     public static void handleOperation(ServerUDP server, DatagramPacket clientPacket) throws IOException {
         DatagramSocket socket = server.getSocket();
         byte[] recvBuf = server.getBuffer();
@@ -53,6 +61,10 @@ public class RRQ {
         }
     }
 
+    /**
+     * Get the filename
+     * @param rrqPacket RRQ package instance
+     */
     public static String getFileName(RRQPacket rrqPacket){
 
         try {
@@ -64,6 +76,9 @@ public class RRQ {
         return null;
     }
 
+    /**
+     * Create response packet
+     */
     public static FileInputStream responsePacket(File file, DatagramSocket socket, DatagramPacket clientPacket){
         try {
             FileInputStream fileInputStream = new FileInputStream(file);
@@ -83,6 +98,12 @@ public class RRQ {
         return null;
     }
 
+    /**
+     * Send a data packet
+     * @param clientPacket DatagramPacket for the UDP client
+     * @param blockNum transfer packet number
+     * @throws IOException if an error occurs
+     */
     public static void sendPackets(DatagramSocket socket, DatagramPacket clientPacket, short blockNum, byte[] fileBuf, int bytesRead) throws IOException {
 
         DataPacket dataPacket = new DataPacket(blockNum, fileBuf, 0, bytesRead);
@@ -92,6 +113,9 @@ public class RRQ {
         logger.info("Waiting for client's ACK for block " + blockNum);
     }
 
+    /**
+     * File transfer function
+     */
     public static void fileTransfer (DatagramSocket socket, FileInputStream fileInputStream, DatagramPacket clientPacket, byte[] recvBuf) throws IOException {
 
         short blockNum = 1;

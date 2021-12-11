@@ -20,7 +20,7 @@ public class WRQTest {
     @Test
     public void testWritingFile() {
         String fileName = "testWriting.txt";
-        File file = new File("C:\\Users\\User\\Desktop\\Kursovaya\\tftpProject\\Server\\src\\main\\resources", fileName);
+        File file = new File("..\\Server\\src\\main\\resources", fileName);
         String testLine = "Hello", resLine;
         ByteArrayOutputStream recvFileBuf = new ByteArrayOutputStream();
         FileInputStream fileInputStream;

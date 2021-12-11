@@ -18,6 +18,11 @@ public class WRQ {
 
     private static final Logger logger = Logger.getLogger(WRQ.class);
 
+    /**
+     * Write request handle operation
+     * @param server UDP server instance
+     * @param clientPacket the DatagramPacket from the UDP client
+     */
     public static void handleOperation(ServerUDP server, DatagramPacket clientPacket) {
         DatagramSocket socket = server.getSocket();
         WRQPacket wrqPacket = new WRQPacket(clientPacket.getData());
@@ -89,6 +94,10 @@ public class WRQ {
         }
     }
 
+    /**
+     * Get the file name from the WRQ package
+     * @param wrqPacket WRQ package instance
+     */
     public static String getFilename(WRQPacket wrqPacket){
         try {
             return wrqPacket.getFilename();
@@ -99,6 +108,9 @@ public class WRQ {
         return null;
     }
 
+    /**
+     * File existence checking
+     */
     public static void fileExistenceChecking(File file, DatagramSocket socket, DatagramPacket clientPacket) {
 
         if (file.exists()) {
@@ -115,6 +127,11 @@ public class WRQ {
         }
     }
 
+    /**
+     * Send initial ACK packet
+     * @param clientPacket the DatagramPacket from the UDP client
+     * @param blockNum transfer packet number
+     */
     public static void sendInitialAckPacket(DatagramSocket socket, DatagramPacket clientPacket, short blockNum) {
         ACKPacket initialAck = new ACKPacket(blockNum);
         DatagramPacket response = new DatagramPacket(initialAck.getPayload(), initialAck.getPayload().length, clientPacket.getSocketAddress());
@@ -128,6 +145,12 @@ public class WRQ {
         }
     }
 
+    /**
+     * Send ACK packet
+     * @param clientPacket the DatagramPacket from the UDP client
+     * @param blockNum transfer packet number
+     * @throws IOException if an error occurs
+     */
     public static void sendAckPacket(DatagramSocket socket, DatagramPacket clientPacket, short blockNum) throws IOException {
         ACKPacket ackPacket = new ACKPacket(blockNum);
         DatagramPacket response = new DatagramPacket(ackPacket.getPayload(), ackPacket.getPayload().length, clientPacket.getSocketAddress());
@@ -135,6 +158,12 @@ public class WRQ {
         logger.info("ACK sent for block " + blockNum);
     }
 
+    /**
+     * File writing
+     * @param file file to write
+     * @param recvFileBuf output stream of the byte array
+     * @throws IOException if an error occurs
+     */
     public static void writingFile(File file,ByteArrayOutputStream recvFileBuf) throws IOException {
         FileOutputStream fileOutputStream = new FileOutputStream(file);
         recvFileBuf.writeTo(fileOutputStream);

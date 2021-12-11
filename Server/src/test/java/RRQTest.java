@@ -20,7 +20,7 @@ public class RRQTest {
     @Test
     public void testFileCreation() {
         String fileName = "1.jpg";
-        File file = new File("..\\resources", fileName);
+        File file = new File("..\\Server\\src\\main\\resources", fileName);
         try {
             file.createNewFile();
         } catch (IOException e) {
@@ -33,7 +33,7 @@ public class RRQTest {
     public void testBytesRead() {
         String fileName = "test.txt";
         byte [] fileBuf = new byte[8];
-        File file = new File("C:\\Users\\User\\Desktop\\Kursovaya\\tftpProject\\Server\\src\\main\\resources", fileName);
+        File file = new File("..\\Server\\src\\main\\resources", fileName);
         try {
             int bytesRead = new FileInputStream(file).read(fileBuf);
             Assert.assertNotEquals(0, bytesRead);
@@ -45,7 +45,7 @@ public class RRQTest {
     @Test
     public void testFileStream() {
         String fileName = "test.txt";
-        File file = new File("C:\\Users\\User\\Desktop\\Kursovaya\\tftpProject\\Server\\src\\main\\resources", fileName);
+        File file = new File("..\\Server\\src\\main\\resources", fileName);
             try {
                 file.createNewFile();
             } catch (IOException e) {
