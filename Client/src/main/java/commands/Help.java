@@ -2,10 +2,12 @@ package commands;
 
 
 import client.ClientUtils;
+import org.apache.log4j.Logger;
 
 import java.util.HashMap;
 
 public class Help implements Command {
+    private static final Logger logger = Logger.getLogger(Help.class);
 
     @Override
     public String getCommand() {
@@ -35,6 +37,7 @@ public class Help implements Command {
                 Command command = commands.get(args[0]);
                 System.out.println(ClientUtils.commandUsageFormat(command));
             } else {
+                logger.error("Unknown command!");
                 System.out.println("Unknown command!");
             }
         }

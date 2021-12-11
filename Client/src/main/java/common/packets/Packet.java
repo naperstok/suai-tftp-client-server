@@ -1,7 +1,7 @@
 package common.packets;
 
-
 import common.codes.OpCode;
+import org.apache.log4j.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -9,6 +9,7 @@ import java.io.IOException;
 
 public class Packet {
 
+    private static final Logger logger = Logger.getLogger(Packet.class);
     protected byte[] payload;
     protected final ByteArrayOutputStream byteArrayOutputStream;
     protected final DataOutputStream dataOutputStream;
@@ -27,6 +28,7 @@ public class Packet {
             dataOutputStream.flush();
             writePayload();
         } catch (IOException ex) {
+            logger.fatal(ex);
             ex.printStackTrace();
         }
     }
@@ -38,6 +40,7 @@ public class Packet {
             dataOutputStream.writeByte(opcode.op);
             writePayload();
         } catch (IOException ex) {
+            logger.fatal(ex);
             ex.printStackTrace();
         }
     }

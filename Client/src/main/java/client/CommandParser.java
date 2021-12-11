@@ -2,10 +2,13 @@ package client;
 
 import commands.Command;
 import commands.CommandUtils;
+import org.apache.log4j.Logger;
 
 import java.util.HashMap;
 
 public class CommandParser {
+    private static final Logger logger = Logger.getLogger(CommandParser.class);
+
     private final HashMap<String, Command> commands;
 
     public CommandParser() {
@@ -25,7 +28,7 @@ public class CommandParser {
         if (commands.containsKey(cmd.toLowerCase())) {
             commands.get(cmd.toLowerCase()).execute(args);
         } else {
-            System.out.println("Unknown command!");
+            logger.error("Unknown command!");
         }
     }
 

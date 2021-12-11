@@ -7,6 +7,7 @@ import common.packets.ACKPacket;
 import common.packets.DataPacket;
 import common.packets.ErrorPacket;
 import common.packets.WRQPacket;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.net.DatagramPacket;
@@ -14,6 +15,8 @@ import java.net.DatagramSocket;
 import java.net.SocketTimeoutException;
 
 public class WRQ {
+
+    private static final Logger logger = Logger.getLogger(WRQ.class);
 
     public static void handleOperation(ServerUDP server, DatagramPacket clientPacket) {
         DatagramSocket socket = server.getSocket();
@@ -23,12 +26,12 @@ public class WRQ {
         filename = getFilename(wrqPacket);
 
         if (filename == null) {
-            sendReport("File name equals null\n");
+            logger.fatal("File name equals null");
             System.exit(1);
         }
 
         File file = new File(server.getRootDir(), filename);
-        sendReport("User want to upload file named: " + filename + "\n");
+        logger.info("User want to upload file named: " + filename);
 
         fileExistenceChecking(file, socket, clientPacket);
 
@@ -43,8 +46,7 @@ public class WRQ {
 
             while (true) {
                 if (tries == 0) {
-                    sendReport("Max transmission attempts reached. File transfer failed.\n");
-                    System.out.println("Max transmission attempts reached. File transfer failed.");
+                    logger.fatal("Max transmission attempts reached. File transfer failed.");
                     socket.setSoTimeout(Constants.BASE_TIMEOUT);
                     recvFileBuf.close();
                 }
@@ -55,8 +57,7 @@ public class WRQ {
                     blockNum = dataPacket.getBlockNumber();
 
                     int receivedBlockSize = clientPacket.getLength() - 4; //4 -- опкод + номер блока
-                    sendReport("Received " + receivedBlockSize + " bytes\n");
-                    System.out.printf("Received %d bytes\n", receivedBlockSize);
+                    logger.info("Received " + receivedBlockSize + " bytes");
                     bytesReceived += receivedBlockSize;
                     recvFileBuf.write(dataPacket.getPayload(), 4, receivedBlockSize);
                     tries = 5;
@@ -70,20 +71,17 @@ public class WRQ {
                 } catch (IOException ex) {
                     if (ex.getCause() instanceof SocketTimeoutException) {
                         tries--;
-                        sendReport("No data received for next block -- retransmitting ACK.\n");
-                        System.out.println("No data received for next block - retransmitting ACK.");
+                        logger.error("No data received for next block - retransmitting ACK.");
                         socket.setSoTimeout(socket.getSoTimeout() + 1000);
                     } else {
-                        sendReport("Failed to send initial ACK!\n");
-                        System.out.println("Failed to send initial ACK!");
+                        logger.fatal(ex);
                         ex.printStackTrace();
                         System.exit(1);
                     }
                 }
             }
 
-            sendReport("Received " + bytesReceived + " bytes, file transfer complete.\n");
-            System.out.println("Received " + bytesReceived + " bytes, file transfer complete.");
+            logger.info("Received " + bytesReceived + " bytes, file transfer complete.");
             writingFile(file, recvFileBuf);
 
         } catch (IOException ex) {
@@ -91,16 +89,11 @@ public class WRQ {
         }
     }
 
-    private static boolean sendReport(String report) {
-        return LogWriter.writeEvent(report);
-    }
-
     public static String getFilename(WRQPacket wrqPacket){
         try {
             return wrqPacket.getFilename();
         } catch (IOException ex) {
-            sendReport("Failed to deserialize file name\n");
-            System.out.println("Failed to deserialize file name!");
+            logger.error(ex);
             ex.printStackTrace();
         }
         return null;
@@ -109,16 +102,14 @@ public class WRQ {
     public static void fileExistenceChecking(File file, DatagramSocket socket, DatagramPacket clientPacket) {
 
         if (file.exists()) {
-            sendReport("Error - file already exists!\n");
+            logger.error("File already exists!");
             ErrorPacket errorPacket = new ErrorPacket(ErrorCode.FILE_ALREADY_EXISTS, "File already exists!");
-            System.out.println("Error - file already exists!");
             DatagramPacket response = new DatagramPacket(errorPacket.getPayload(), errorPacket.getPayload().length, clientPacket.getSocketAddress());
 
             try {
                 socket.send(response);
             } catch (IOException ex) {
-                sendReport("Failed to send response packet\n");
-                System.out.println("Failed to send response packet!");
+                logger.fatal(ex);
                 ex.printStackTrace();
             }
         }
@@ -131,8 +122,7 @@ public class WRQ {
         try {
             socket.send(response);
         } catch (IOException ex) {
-            sendReport("Failed to send initial ACK\n");
-            System.out.println("Failed to send initial ACK!");
+            logger.fatal(ex);
             ex.printStackTrace();
             System.exit(1);
         }
@@ -142,8 +132,7 @@ public class WRQ {
         ACKPacket ackPacket = new ACKPacket(blockNum);
         DatagramPacket response = new DatagramPacket(ackPacket.getPayload(), ackPacket.getPayload().length, clientPacket.getSocketAddress());
         socket.send(response);
-        sendReport("ACK sent for block " + blockNum + "\n");
-        System.out.printf("ACK sent for block %d\n", blockNum);
+        logger.info("ACK sent for block " + blockNum);
     }
 
     public static void writingFile(File file,ByteArrayOutputStream recvFileBuf) throws IOException {

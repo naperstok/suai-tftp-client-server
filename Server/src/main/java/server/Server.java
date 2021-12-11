@@ -4,6 +4,7 @@ import common.Constants;
 import common.ServerUDP;
 import common.codes.OpCode;
 import common.packets.Packet;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -12,15 +13,14 @@ import java.net.SocketException;
 
 public class Server {
     private ServerUDP server;
+    private static final Logger logger = Logger.getLogger(Server.class);
 
     public void start(String fileRoot) throws SocketException {
 
         server = new ServerUDP(Constants.SERVER_LISTEN_PORT, 1024, fileRoot);
         DatagramSocket socket = server.getSocket();
         byte[] recvBuf = server.getBuffer();
-
-        System.out.printf("TFTP server started on port %d\n", Constants.SERVER_LISTEN_PORT);
-        LogWriter.writeEvent("TFTP server started on port " + Constants.SERVER_LISTEN_PORT + "\n");
+        logger.info("TFTP server started on port " + Constants.SERVER_LISTEN_PORT);
 
         while (true) {
             try {
@@ -32,6 +32,7 @@ public class Server {
                 commandSelection(packet.getOpcode(), clientPacket);
 
             } catch (IOException ex) {
+                logger.fatal(ex);
                 ex.printStackTrace();
             }
         }
@@ -41,9 +42,7 @@ public class Server {
 
         try {
             server = new ServerUDP(Constants.SERVER_LISTEN_PORT, 1024, fileRoot);
-
-            System.out.printf("TFTP server started on port %d\n", Constants.SERVER_LISTEN_PORT);
-            LogWriter.writeEvent("TFTP server started on port " + Constants.SERVER_LISTEN_PORT + "\n");
+            logger.info("TFTP server started on port " + Constants.SERVER_LISTEN_PORT);
 
             if (test) {
                 while (true) {
@@ -54,10 +53,6 @@ public class Server {
         } catch (Exception e) {
             return false;
         }
-    }
-
-    public boolean sendReport(String report) {
-        return LogWriter.writeEvent(report);
     }
 
     public boolean serverIsOnline() {
@@ -78,12 +73,12 @@ public class Server {
         if(server == null) return false;
         switch (string) {
             case RRQ -> {
-                sendReport("User connected and making a read-request\n");
+                logger.info("User connected and making a read-request");
                 RRQ.handleOperation(server, clientPacket);
                 break;
             }
             case WRQ -> {
-                sendReport("User connected and making a write-request\n");
+                logger.info("User connected and making a write-request");
                 WRQ.handleOperation(server, clientPacket);
                 break;
             }

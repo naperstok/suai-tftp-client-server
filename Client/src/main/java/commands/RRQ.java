@@ -7,6 +7,7 @@ import common.ClientUDP;
 import common.Constants;
 import common.codes.OpCode;
 import common.packets.*;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.net.DatagramPacket;
@@ -15,6 +16,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 
 public class RRQ implements Command {
+    private static final Logger logger = Logger.getLogger(RRQ.class);
 
     @Override
     public String getCommand() {
@@ -67,12 +69,12 @@ public class RRQ implements Command {
             DataPacket dataPacket = new DataPacket(serverPacket.getData());
             int bytesReceived = fileTransfer(socket, dataPacket, serverPacket, fileBuf, buf, timeout);
 
-            System.out.println("Received " + bytesReceived + " bytes");
+            logger.info("Received " + bytesReceived + " bytes");
             File file = new File(Client.CLIENT_ROOT, filename);
             if (!file.exists()) {
                 boolean created = file.createNewFile();
                 if (!created) {
-                    System.out.println("Couldn't create file!");
+                    logger.error("Couldn't create file!");
                     client.close();
                     return;
                 }
@@ -80,6 +82,7 @@ public class RRQ implements Command {
             writingFile(file, fileBuf);
             client.close();
         } catch (IOException ex) {
+            logger.fatal(ex);
             ex.printStackTrace();
         }
     }
@@ -99,13 +102,14 @@ public class RRQ implements Command {
                 if (!retransmit) {
                     bytesReceived += receivedBlockSize;
                     fileBuf.write(dataPacket.getPayload(), 4, receivedBlockSize);
-                    System.out.println("Received block " + ackNum + " of size " + receivedBlockSize + " bytes\nSending ACK for block " + ackNum);
+                    logger.info("Received block " + ackNum + " of size " + receivedBlockSize + " bytes");
+                    logger.info("Sending ACK for block " + ackNum);
                 }
 
                 sendAckPacket(socket, serverPacket, ackNum);
 
                 if (receivedBlockSize < Constants.BLOCK_SIZE) {
-                    System.out.println("Block " + ackNum + " has size < 512 bytes - file transfer complete!");
+                    logger.info("Block " + ackNum + " has size < 512 bytes - file transfer complete!");
                     break;
                 }
 
@@ -114,12 +118,13 @@ public class RRQ implements Command {
                 dataPacket = new DataPacket(serverPacket.getData());
                 retransmit = false;
             } catch (IOException ex) {
-                System.out.println("Time is out... " + tries + " tries left.");
+                logger.error("Time is out... " + tries + " tries left.");
                 timeout += 1000;
                 tries--;
                 try {
                     socket.setSoTimeout(timeout);
                 } catch (SocketException e) {
+                    logger.fatal(e);
                     e.printStackTrace();
                 }
                 retransmit = true;
@@ -141,9 +146,9 @@ public class RRQ implements Command {
         try {
             socket.receive(serverPacket);
         } catch (Exception exception) {
+            logger.fatal(exception);
             Notification.createNotification(Client.getMenu(), "Error!", true, false, "Mistake! The server is not working!").setVisible(true);
         }
-
         return new Packet(serverPacket.getData());
     }
 

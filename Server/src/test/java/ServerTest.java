@@ -17,12 +17,6 @@ public class ServerTest {
     }
 
     @Test
-    public void testSendReport() {
-        Server server = new Server();
-        Assert.assertTrue(server.sendReport("test report"));
-    }
-
-    @Test
     public void testDatagramPacketCreation() {
         Server server = new Server();
         Assert.assertNull(server.createDatagramPacket(null));

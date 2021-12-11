@@ -7,12 +7,14 @@ import client.Notification;
 import common.*;
 import common.codes.OpCode;
 import common.packets.*;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 
 public class WRQ implements Command {
+    private static final Logger logger = Logger.getLogger(WRQ.class);
 
     @Override
     public String getCommand() {
@@ -66,8 +68,7 @@ public class WRQ implements Command {
                 return;
             }
 
-            System.out.println("Initial acknowledgement received from server - commencing file transfer...");
-
+            logger.info("Initial acknowledgement received from server - commencing file transfer...");
             FileInputStream fileInputStream = new FileInputStream(file);
             byte[] fileBuf = new byte[Constants.BLOCK_SIZE];
             int bytesRead = fileInputStream.read(fileBuf);
@@ -78,6 +79,7 @@ public class WRQ implements Command {
             client.close();
             fileInputStream.close();
         } catch (IOException ex) {
+            logger.fatal(ex);
             ex.printStackTrace();
         }
     }
@@ -95,12 +97,11 @@ public class WRQ implements Command {
         while (bytesRead != -1) {
             DataPacket dataPacket = new DataPacket(blockNum, fileBuf, 0, bytesRead);
             int bytesSent = client.send(dataPacket.getPayload()) - 4;
-            System.out.println("Block " + blockNum + " - Sent " + bytesSent + " bytes");
-
-            System.out.println("Waiting for server's ACK for block " + blockNum);
+            logger.info("Block " + blockNum + " - Sent " + bytesSent + " bytes");
+            logger.info("Waiting for server's ACK for block " + blockNum);
             socket.receive(serverPacket);
             ACKPacket ackPacket = new ACKPacket(serverPacket.getData());
-            System.out.println("ACK received for block " + ackPacket.getBlockNumber());
+            logger.info("ACK received for block " + ackPacket.getBlockNumber());
 
             bytesRead = fileInputStream.read(fileBuf);
             blockNum = (short) ((blockNum == Short.MAX_VALUE) ? 0 : blockNum + 1);

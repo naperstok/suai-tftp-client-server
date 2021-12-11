@@ -4,11 +4,13 @@ package common.packets;
 import common.Utils;
 import common.codes.ErrorCode;
 import common.codes.OpCode;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public class ErrorPacket extends Packet {
+    private static final Logger logger = Logger.getLogger(ErrorPacket.class);
 
     public ErrorPacket(ErrorCode errorCode, String errorMessage) {
         super();
@@ -20,6 +22,7 @@ public class ErrorPacket extends Packet {
             dataOutputStream.writeByte(0x0);
             writePayload();
         } catch (IOException ex) {
+            logger.fatal(ex);
             ex.printStackTrace();
         }
     }
