@@ -75,12 +75,10 @@ public class Server {
             case RRQ -> {
                 logger.info("User connected and making a read-request");
                 RRQ.handleOperation(server, clientPacket);
-                break;
             }
             case WRQ -> {
                 logger.info("User connected and making a write-request");
                 WRQ.handleOperation(server, clientPacket);
-                break;
             }
             default -> {
                 return false;
